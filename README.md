@@ -1,1 +1,1 @@
-# BlockchainGAD
+# AMGNN
