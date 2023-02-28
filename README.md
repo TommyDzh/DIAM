@@ -1,1 +1,1 @@
-# AMGNN
+# DIAM
