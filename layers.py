@@ -1,25 +1,27 @@
-from typing import Union, Tuple
-from torch_geometric.typing import OptPairTensor, Adj, Size
-from typing import Union, Tuple
-from torch_geometric.typing import Adj, OptTensor, PairTensor
-
 from torch import Tensor
-
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.dense.linear import Linear
 from torch import Tensor
 import torch.nn.functional as F
 from torch_sparse import SparseTensor, matmul
-from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.nn.dense.linear import Linear
-from torch_geometric.typing import Adj, OptTensor
+from torch_geometric.typing import Adj, OptTensor, PairTensor, OptPairTensor, Adj, Size
 from typing import Callable, Union, Optional
 import torch
 from torch import Tensor
 from torch.nn import Sequential, Linear, ReLU, Sigmoid, Parameter
 from torch_sparse import SparseTensor, matmul
-from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
+
+from typing import Union, Tuple
+
+from torch import Tensor
+import torch.nn as nn
+
+from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.nn.dense.linear import Linear
+
+
+
 class Attention(nn.Module):
     def __init__(self, in_size, hidden_size=16, activation = 'softmax'):
         super(Attention, self).__init__()
@@ -558,13 +560,6 @@ class DualCONTRAConv(MessagePassing):
         return matmul(adj_t, x[0], reduce=self.aggr)    
 
     
-from typing import Union, Tuple
-from torch_geometric.typing import Adj, OptTensor, PairTensor
-
-from torch import Tensor
-
-from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.nn.dense.linear import Linear
 
 
 class DualLEConv(MessagePassing):

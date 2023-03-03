@@ -10,9 +10,10 @@ import tqdm
 import torch
 from torch_geometric.nn import APPNP, EdgeConv, LEConv,TransformerConv,GCNConv, SGConv, SAGEConv, GATConv, JumpingKnowledge, APPNP, MessagePassing
 from torch_geometric.nn.conv.gcn_conv import gcn_norm
-# from layers import AAMConv, MixHop, DAGNNConv
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from layers import *
 class Binary_Classifier(nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, rnn_in_channels, encoder_layer='gcn', decoder='mlp', rnn_agg = 'last',num_layers=2,
+    def __init__(self, in_channels, hidden_channels, out_channels, rnn_in_channels, encoder_layer='gcn', decoder='mlp', rnn='gru', rnn_agg = 'last',num_layers=2,
                  decoder_layers = 1, dropout=0.5, bias=True, save_mem=True, use_bn=True, concat_feature=1, emb_first=1, heads=1,lstm_norm='ln', gnn_norm = 'bn', graph_op='',aggr='add'):
         super(Binary_Classifier, self).__init__()
         self.rnn_agg = rnn_agg
@@ -54,76 +55,7 @@ class Binary_Classifier(nn.Module):
         self.encoder = nn.ModuleList()
         self.encoder_layer = encoder_layer
         use_rnn = 1
-        if encoder_layer == 'gcn':
-            self.encoder.append(
-                GCNConv(in_channels*concat_feature+2*rnn_out_channels*use_rnn, hidden_channels, cached=not save_mem, normalize=not save_mem))
-            self.encoder.append(
-                GCNConv(hidden_channels, hidden_channels, cached=not save_mem, normalize=not save_mem))         
-        elif 'dualleo' in encoder_layer:
-            use_weight = False
-            sub = False
-            if 'weight' in encoder_layer:
-                use_weight = True
-            if 'sub' in encoder_layer:
-                sub = True
-            self.encoder.append(
-                DualLEConv(hidden_channels, hidden_channels, bias=bias, sub=sub, use_weight=use_weight))
-            for _ in range(encoder_layers-1):
-                self.encoder.append(
-                    DualLEConv(hidden_channels, hidden_channels, bias=bias, sub=sub, use_weight=use_weight))
-        elif 'dualsageo' in encoder_layer:
-            use_weight = False
-            sub = False
-            if 'weight' in encoder_layer:
-                use_weight = True
-            if 'sub' in encoder_layer:
-                sub = True
-            self.encoder.append(
-                DualSAGEConv(hidden_channels, hidden_channels, bias=bias, sub=sub, use_weight=use_weight))
-            for _ in range(encoder_layers-1):
-                self.encoder.append(
-                    DualSAGEConv(hidden_channels, hidden_channels, bias=bias, sub=sub, use_weight=use_weight))        
-        elif 'duallea' in encoder_layer:
-            atten_hidden =  encoder_layer.split('-')[-1]
-            atten_act =  encoder_layer.split('-')[1]
-            if atten_hidden.isdigit():
-                atten_hidden = int(atten_hidden)
-            else:
-                atten_hidden = 16
-            if 'tanh' in encoder_layer:
-                atten_act = 'tanh'
-            else:
-                atten_act = 'softmax'
-                
-            self.encoder.append(
-                DualLEAConv(hidden_channels, hidden_channels, bias=bias, atten_hidden=atten_hidden, activation=atten_act))
-            for _ in range(encoder_layers-1):
-                self.encoder.append(
-                    DualLEAConv(hidden_channels, hidden_channels, bias=bias, atten_hidden=atten_hidden,activation=atten_act))
-        elif 'dualsagea' in encoder_layer:
-            atten_hidden =  encoder_layer.split('-')[-1]
-            atten_act =  encoder_layer.split('-')[1]
-            if atten_hidden.isdigit():
-                atten_hidden = int(atten_hidden)
-            else:
-                atten_hidden = 16
-            if 'tanh' in encoder_layer:
-                atten_act = 'tanh'
-            else:
-                atten_act = 'softmax'
-                
-            self.encoder.append(
-                DualSAGEAConv(hidden_channels, hidden_channels, bias=bias, atten_hidden=atten_hidden, activation=atten_act))
-            for _ in range(encoder_layers-1):
-                self.encoder.append(
-                    DualSAGEAConv(hidden_channels, hidden_channels, bias=bias, atten_hidden=atten_hidden,activation=atten_act))                        
-#         elif  'dualcat' in encoder_layer:
-#             self.encoder.append(
-#                 DualCATConv(hidden_channels, hidden_channels, bias=bias))
-#             for _ in range(encoder_layers-1):
-#                 self.encoder.append(
-#                     DualCATConv(hidden_channels, hidden_channels, bias=bias))
-        elif 'dualcata' in encoder_layer:
+        if 'dualcata' in encoder_layer:
             atten_hidden =  encoder_layer.split('-')[-1]
             if atten_hidden.isdigit():
                 atten_hidden = int(atten_hidden)
@@ -137,11 +69,13 @@ class Binary_Classifier(nn.Module):
                     DualCATAConv(hidden_channels, hidden_channels, bias=bias, atten_hidden=atten_hidden,aggr=aggr))
         else:
             raise NameError(f'{encoder_layer} is not implemented!')
+        
         # Initialize decoder
         self.decoder = nn.ModuleList()
         for _ in range(decoder_layers-1):
             self.decoder.append(nn.Linear(hidden_channels, hidden_channels))
         self.decoder.append(nn.Linear(hidden_channels, out_channels))
+        
         # Initialize other modules
         self.dropout = dropout
         self.activation = F.relu
@@ -159,6 +93,7 @@ class Binary_Classifier(nn.Module):
         elif self.gnn_norm == 'bn':
             for _ in range(self.encoder_layers):
                 self.bns.append(nn.BatchNorm1d(hidden_channels))
+                
     def forward(self, in_pack, out_pack, lens_in, lens_out, edge_index = None, edge_attr = None): 
 #         t0 = time.time()
         # generate lstm embeddings

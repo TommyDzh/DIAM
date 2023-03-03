@@ -3,20 +3,7 @@ import json
 import os
 
 
-dir='/data/zhihao/Bitcoin'
-data_dir='/data/zhihao/Bitcoin'
-def load_pickle(fname):
-    with open(os.path.join(data_dir,fname), 'rb') as f:
-        return pickle.load(f)
-def save_obj(obj, name ):
-    with open( os.path.join(data_dir,name)+'.pkl', 'wb') as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-def save_json(data, name):
-    with open( os.path.join(data_dir,name)+'.json', 'w') as f:
-        json.dump(data,f)
-def load_json(fname):
-    with open( os.path.join(data_dir,fname), 'r') as f:
-        return json.load(f)
+
     
     
 from torch_geometric.utils import subgraph
@@ -31,10 +18,27 @@ import torch
 from torch import Tensor
 from tqdm import tqdm
 from torch_geometric.data import Data, HeteroData
-from torch_geometric.loader.utils import edge_type_to_str
-from torch_geometric.loader.utils import to_csc, to_hetero_csc
+from torch_geometric.sampler.utils import to_csc, to_hetero_csc
 from torch_geometric.loader.utils import filter_data
 import torch_geometric
+import numpy as np
+
+import random
+
+dir='/data/zhihao/Bitcoin'
+data_dir='/data/zhihao/Bitcoin'
+def load_pickle(fname):
+    with open(os.path.join(data_dir,fname), 'rb') as f:
+        return pickle.load(f)
+def save_obj(obj, name ):
+    with open( os.path.join(data_dir,name)+'.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+def save_json(data, name):
+    with open( os.path.join(data_dir,name)+'.json', 'w') as f:
+        json.dump(data,f)
+def load_json(fname):
+    with open( os.path.join(data_dir,fname), 'r') as f:
+        return json.load(f)
 
 def subdata(data: torch_geometric.data.data.Data, subset, subedges=None, relabel_nodes=True):
     device = data.edge_index.device
@@ -89,14 +93,14 @@ def subdata(data: torch_geometric.data.data.Data, subset, subedges=None, relabel
         sub_data.edge_index = edge_index
     return sub_data
 
-def load_pseudo_pg(datadir_path='./data/2015', use_unlabeled = 'SEMI', scale='minmax', graph_type = 'MultiDi', feature_type ='edge', train_rate=0.5, anomaly_rate=None, random_state=5211):
+def load_data(data_path='./data/2015', use_unlabeled = 'SEMI', scale='minmax', graph_type = 'MultiDi', feature_type ='edge', train_rate=0.5, anomaly_rate=None, random_state=5211):
     # fix random seeds
     if random_state is not None:
         random.seed(random_state)
         np.random.seed(random_state)
         torch.manual_seed(random_state)
         torch.cuda.manual_seed_all(random_state)
-    data = torch.load(os.path.join(datadir_path, 'MultiGraph_2015_3rd.pt'))
+    data = torch.load(data_path)
     if anomaly_rate:
         n_neg = (data.y == 0).sum().item()
         pos_ids = (data.y == 1).nonzero().view(-1).numpy()
@@ -131,22 +135,7 @@ def load_pseudo_pg(datadir_path='./data/2015', use_unlabeled = 'SEMI', scale='mi
     n_nodes = len(labels) # refresh n_nodes
     all_id = np.arange(n_nodes)
     
-#     if scale == 'norm':
-#         X_norm = preprocessing.normalize(X, norm='l1', axis=0)
-# #         data.edge_attr = preprocessing.normalize(data.edge_attr, norm='l1', axis=0)
-#     elif scale == 'std':
-#         scaler = preprocessing.StandardScaler()
-#         X_norm = scaler.fit_transform(X)
-#         scaler = preprocessing.StandardScaler()
-#         data.edge_attr = torch.tensor(scaler.fit_transform(data.edge_attr)).float()
-#     elif scale == 'minmax':
-#         scaler = preprocessing.MinMaxScaler()
-#         X_norm = scaler.fit_transform(X)
-#         scaler = preprocessing.MinMaxScaler()
-#         data.edge_attr = torch.tensor(scaler.fit_transform(data.edge_attr)).float()
-#     elif scale == 'none':
-#         X_norm = X
-#     data['features'] = torch.tensor(X_norm).float()
+
     data['labels'] = torch.tensor(labels, dtype = int)
 
     # Split data into train/val/test
