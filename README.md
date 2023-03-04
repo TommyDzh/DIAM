@@ -25,7 +25,7 @@ Transaction Networks of Cryptocurrencies".
 
 The four datasets can be downloaded here: 	[datasets](https://connectpolyu-my.sharepoint.com/:f:/r/personal/22040455r_connect_polyu_hk/Documents/DIAM?csf=1&web=1&e=SdNd2o)
 ## Usage
-1. Download and save data to data folder.
+1. Download and extract data files to `/data` folder.
 2. Generate edge sequences.
 
     `python3 preprocess.py`
