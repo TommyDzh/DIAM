@@ -23,7 +23,7 @@ Transaction Networks of Cryptocurrencies".
 | Bitcoin-M   | 2,505,841  | 14,181,316  | 5                | 46,930    | 213,026   | 1:4.54         |
 | Bitcoin-L                         | 20,085,231 | 203,419,765 | 8                | 362,391   | 1,271,556 | 1: 3.51        |
 
-The four datasets can be downloaded here: 	[datasets](https://connectpolyu-my.sharepoint.com/:f:/r/personal/22040455r_connect_polyu_hk/Documents/DIAM?csf=1&web=1&e=SdNd2o)
+The four datasets can be downloaded here: 	[datasets](https://connectpolyu-my.sharepoint.com/:f:/g/personal/22040455r_connect_polyu_hk/Eql0SlCGirNOsxT_X6qIfHkBTb2PNVM2JWVV9IEQmPAAoA)
 ## Usage
 1. Download and extract data files to `/data` folder.
 2. Generate edge sequences.
