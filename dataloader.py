@@ -25,8 +25,8 @@ import numpy as np
 
 import random
 
-dir='/data/zhihao/Bitcoin'
-data_dir='/data/zhihao/Bitcoin'
+dir='/data/zhihao/Bitcoin'#change to your own data dir
+data_dir='/data/zhihao/Bitcoin'#change to your own data dir
 def load_pickle(fname):
     with open(os.path.join(data_dir,fname), 'rb') as f:
         return pickle.load(f)
